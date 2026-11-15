@@ -1,0 +1,24 @@
+# guestbook@1: one replica of a replicated guestbook and write counter (stdlib Python, no build)
+[cell]
+api = "guestbook"
+version = 1
+kind = "cell"
+runtime = "script"
+entry = "replica.py"
+args = ["--id", "${ID}", "--listen", "${LISTEN}", "--peers", "${PEERS}", "--data", "${CE_CELL_DATA}", "--secret-file", "${SECRET}"]
+needs = ["python3"]
+depends_on = []
+
+[ops]
+# all POST + JSON, HMAC-SHA256 signed (X-GB-Sig over "<path>\n<body>")
+Write = "/write {kind: count|sign, data} -> {ok, seq, hash, epoch} after a majority has it on disk"
+Status = "/status -> {role, epoch, leader, last_seq, head, commit, commit_hash, counter, guests}"
+Verify = "/verify {acked: [[seq, hash]]} -> {chain_ok, commit_hash, missing}"
+Entries = "/entries {from, n} -> {entries}"
+ProbeStale = "/probe-stale -> replays a write at the last epoch this replica led; peers must refuse it"
+Crash = "/crash -> ends this process (only with --allow-crash; demo use)"
+Vote = "/vote (peer)"
+Append = "/append (peer)"
+
+[limits]
+disk_bytes = "256M"

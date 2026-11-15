@@ -1,0 +1,14 @@
+[Unit]
+Description=self-healing demo front (page + API on loopback)
+After=network-online.target
+
+[Service]
+EnvironmentFile=%h/.config/demo-self-healing/front.env
+ExecStart=/usr/bin/python3 %h/.local/lib/demo-self-healing/front/front.py --listen ${LISTEN} --secret-file %h/.config/demo-self-healing/secret --data %h/.local/state/demo-self-healing/front --replica ${R1} --replica ${R2} --replica ${R3} --origin https://ce-net.com --origin https://www.ce-net.com
+Restart=always
+RestartSec=3
+MemoryMax=256M
+NoNewPrivileges=yes
+
+[Install]
+WantedBy=default.target
