@@ -4,7 +4,7 @@ A live counter and a guestbook take writes from viewers. Three replicas hold eve
 current leader process. The page goes amber for about a second, a new leader is elected, and every write that was
 acknowledged is still there. The page then proves it from the raw data on all three replicas.
 
-Live page: ce-net.com/demos/self-healing
+The public page goes live at ce-net.com/demos/self-healing after the next site deploy. Until then, the demo runs locally as described below.
 
 ## Run it in under 5 minutes
 
