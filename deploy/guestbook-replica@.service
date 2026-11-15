@@ -1,0 +1,15 @@
+[Unit]
+Description=guestbook@1 replica %i (self-healing demo)
+After=network-online.target
+
+[Service]
+EnvironmentFile=%h/.config/demo-self-healing/replica-%i.env
+ExecStart=/usr/bin/python3 %h/.local/lib/demo-self-healing/guestbook/replica.py --id %i --listen ${LISTEN} --peers ${PEERS} --data %h/.local/state/demo-self-healing/%i --secret-file %h/.config/demo-self-healing/secret --allow-crash
+# the demo's Crash op ends this process; it comes back like any crashed service
+Restart=always
+RestartSec=3
+MemoryMax=256M
+NoNewPrivileges=yes
+
+[Install]
+WantedBy=default.target

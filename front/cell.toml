@@ -1,0 +1,21 @@
+# demos.self-healing: the page's server. Writes to the guestbook@1 leader, watches the replicas (died, elected,
+# caught-up events in the orch@1 Watch shape), sends Crash to the leader, runs the proof.
+[cell]
+api = "demos.self-healing"
+version = 1
+kind = "cell"
+runtime = "script"
+entry = "front.py"
+needs = ["python3"]
+depends_on = ["guestbook@1"]
+
+[http]
+"GET /api/state" = "replicas, leader, epoch, counter, guests, acked count, last proof"
+"GET /api/events?after=N" = "long poll (15 s): kill, died, back, restarted, elected, caught-up, stale-refused, proof"
+"POST /api/count" = "one counter write (5/s per visitor)"
+"POST /api/sign" = "{name, msg} guestbook write (1 per 5 s per visitor)"
+"POST /api/kill" = "Crash the current leader process (one per 12 s for everyone)"
+"POST /api/proof" = "run the proof now"
+
+[limits]
+disk_bytes = "64M"

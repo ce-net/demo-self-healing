@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Self-healing · ce-net</title>
+<meta name="description" content="Kill the leader of a three-replica guestbook live. A new leader is elected in about a second and every acknowledged write is still there, proven by a hash chain.">
+<meta name="theme-color" content="#070807">
+<link rel="stylesheet" href="tokens.css"><link rel="stylesheet" href="components.css"><link rel="stylesheet" href="style.css">
+<script>try{if(localStorage.getItem("ce-theme")==="light")document.documentElement.dataset.theme="light"}catch(e){}</script>
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="https://ce-net.com/">ce</a>
+  <div class="headline"><b>Kill a node. Keep the data.</b><span id="hl">connecting</span></div>
+  <nav class="btns glass"><a class="btn quiet" href="https://ce-net.com/demos/">Demos</a>
+    <a class="btn quiet" href="https://github.com/ce-net/demo-self-healing">Source</a>
+    <button class="btn quiet" id="theme" type="button" aria-label="Switch between dark and light">Light</button></nav>
+</header>
+
+<main>
+  <section class="intro">
+    <div class="crumb">ce-net / Demos / <b>Self-healing</b></div>
+    <h1 class="display over">Kill the leader.</h1>
+    <p class="lede">Three replicas of one guestbook cell hold every write. Press the red button and the leader process
+      dies on the spot. The other two elect a new leader in about a second, and every write you saw acknowledged is
+      still there. The proof below checks it from the raw data on all three.</p>
+  </section>
+
+  <section class="stats">
+    <div class="glass ticks stat"><div class="label"><i></i>Writes acknowledged</div>
+      <div class="num acc" id="acked">0</div><div class="sub" id="acked-sub">each with a sequence number and hash</div></div>
+    <div class="glass stat"><div class="label"><i class="g" id="lead-dot"></i>Leader epoch</div>
+      <div class="num" id="epoch">0</div><div class="sub" id="epoch-sub">goes up on every election</div></div>
+    <div class="glass stat"><div class="label"><i></i>Counter</div>
+      <div class="num" id="counter">0</div><div class="sub"><button class="link" id="plus" type="button">Add one</button></div></div>
+  </section>
+
+  <section class="kill glass" id="killbox">
+    <div class="kill-row">
+      <button class="red" id="kill" type="button">Kill the leader</button>
+      <div class="kill-read" id="kill-read" aria-live="polite">The leader is the process that orders every write. Kill it.</div>
+    </div>
+  </section>
+
+  <section class="holders" id="holders" aria-label="Replica holders"></section>
+
+  <section class="cols">
+    <div class="glass card">
+      <div class="label"><i></i>Proof</div>
+      <div id="proof" class="proof"><div class="muted">Runs after every failover, once the killed replica has caught up.</div></div>
+      <button class="btn quiet" id="run-proof" type="button">Run the proof now</button>
+    </div>
+    <div class="glass card">
+      <div class="label"><i class="g"></i>Watch: died, elected, caught up</div>
+      <ol class="events" id="events"></ol>
+    </div>
+  </section>
+
+  <section class="glass card book">
+    <div class="label"><i></i>Guestbook</div>
+    <form id="sign" class="sign" autocomplete="off">
+      <input id="name" maxlength="24" placeholder="Name" aria-label="Name">
+      <input id="msg" maxlength="120" placeholder="Say something, then kill the leader" aria-label="Message" required>
+      <button class="btn primary" type="submit">Sign</button>
+    </form>
+    <div class="muted small" id="sign-read"></div>
+    <ol class="guests" id="guests"></ol>
+  </section>
+
+  <section class="how">
+    <div class="crumb">How it works</div>
+    <ul>
+      <li><b>guestbook@1</b> is a small replicated log. A write is acknowledged only after two of the three replicas
+        have it on disk, so losing any one replica loses nothing that was acknowledged.</li>
+      <li>One leader per <b>epoch</b>, elected by majority vote. Every replica refuses messages from an older epoch, so
+        a leader that was replaced can never write again. The proof replays such a write and shows it refused.</li>
+      <li>Every entry stores the hash of the entry before it. Equal hashes at one sequence number on all three replicas
+        mean equal histories up to that point.</li>
+      <li>The red button sends a Crash op to the leader replica process and nothing else. Its supervisor starts it again
+        a few seconds later, and it catches up from the new leader.</li>
+      <li>Holders: two separate processes on an ARM server, one on a second machine (x86) about 37 ms away.</li>
+    </ul>
+  </section>
+</main>
+<script src="app.js"></script>
+</body></html>
