@@ -22,3 +22,16 @@ Append = "/append (peer)"
 
 [limits]
 disk_bytes = "256M"
+
+[stamp]
+id = "cell:guestbook"
+kind = "cell"
+path = "guestbook/cell.toml"
+updated_at = 2026-11-15T10:04:38Z
+version = "0.2"
+access = "public"
+canonical_of = []
+duplicate_of = ""
+owner = "foreman/lead"
+source_of_truth = "https://github.com/ce-net/demo-self-healing"
+stale_after = 180

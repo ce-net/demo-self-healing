@@ -19,3 +19,16 @@ depends_on = ["guestbook@1"]
 
 [limits]
 disk_bytes = "64M"
+
+[stamp]
+id = "cell:demos.self-healing"
+kind = "cell"
+path = "front/cell.toml"
+updated_at = 2026-11-15T10:04:38Z
+version = "0.2"
+access = "public"
+canonical_of = []
+duplicate_of = ""
+owner = "foreman/lead"
+source_of_truth = "https://github.com/ce-net/demo-self-healing"
+stale_after = 180
