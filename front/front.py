@@ -59,6 +59,7 @@ class Front:
         self.proof = None
         self.stale = None
         self.last_view = 0.0
+        self.viewed = threading.Event()  # set by a page request, wakes the idle status watch at once
         self.auto_rate = auto_rate
         self.rate = {}
 
@@ -99,7 +100,12 @@ class Front:
             for t in ts:
                 t.join()
             self._diff(got)
-            time.sleep(max(0.05, 0.2 - (time.monotonic() - t0)))
+            # 5 status rounds/s while someone watched in the last 60 s, else one every 5 s (CES-1 idle budget)
+            if time.monotonic() - self.last_view < 60:
+                time.sleep(max(0.05, 0.2 - (time.monotonic() - t0)))
+            else:
+                self.viewed.wait(5.0)
+            self.viewed.clear()
 
     def _diff(self, got):
         events = []
@@ -193,6 +199,8 @@ class Front:
                 self.write("count", {"by": "demo"})
 
     def kill(self):
+        self.last_view = time.monotonic()
+        self.viewed.set()
         with self.lock:
             if time.monotonic() - self.last_kill < 12:
                 return {"ok": False, "error": "a failover is still settling; try again in a few seconds",
@@ -333,9 +341,11 @@ def serve(front, listen, origins):
             path, _, q = self.path.partition("?")
             if path == "/api/state":
                 front.last_view = time.monotonic()
+                front.viewed.set()
                 return self._send(200, front.state())
             if path == "/api/events":
                 front.last_view = time.monotonic()
+                front.viewed.set()
                 args = dict(p.split("=", 1) for p in q.split("&") if "=" in p)
                 try:
                     n = int(args.get("after", "0"))

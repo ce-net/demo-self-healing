@@ -292,11 +292,15 @@ class Replica:
     def run(self):
         for pid in self.peers:
             threading.Thread(target=self._replicate, args=(pid,), daemon=True).start()
-        while True:
-            time.sleep(0.02)
-            with self.lock:
-                if self.role != "leader" and time.monotonic() > self.deadline:
+        # Sleep until the election deadline instead of polling it (CES-1: no sub-second timer while idle). A heartbeat
+        # moves the deadline and notifies `changed`; waking early only re-reads it. A leader checks back once a second.
+        with self.lock:
+            while True:
+                left = self.deadline - time.monotonic()
+                if self.role != "leader" and left <= 0:
                     self._start_election()
+                    continue
+                self.changed.wait(1.0 if self.role == "leader" else min(left, 1.0))
 
     def _start_election(self):
         self.epoch += 1
